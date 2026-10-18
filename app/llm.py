@@ -27,7 +27,8 @@ def load_env(path: Path = REPO_ROOT / ".env") -> None:
     """Load KEY=VALUE lines from .env without overriding real environment variables."""
     if not path.exists():
         return
-    for line in path.read_text(encoding="utf-8").splitlines():
+    # utf-8-sig tolerates the byte-order mark Windows Notepad may add.
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
@@ -37,8 +38,13 @@ def load_env(path: Path = REPO_ROOT / ".env") -> None:
 
 # --- Client selection ---------------------------------------------------------
 
+def _api_key() -> str:
+    """The Ollama API key, trimmed: stray whitespace from a .env or shell export gives a 401."""
+    return os.environ.get("OLLAMA_API_KEY", "").strip()
+
+
 def uses_direct_cloud() -> bool:
-    return bool(os.environ.get("OLLAMA_API_KEY"))
+    return bool(_api_key())
 
 
 def get_client(mock: bool = False):
@@ -49,7 +55,7 @@ def get_client(mock: bool = False):
     if uses_direct_cloud():
         return Client(
             host=CLOUD_HOST,
-            headers={"Authorization": f"Bearer {os.environ['OLLAMA_API_KEY']}"},
+            headers={"Authorization": f"Bearer {_api_key()}"},
         )
     return Client()
 

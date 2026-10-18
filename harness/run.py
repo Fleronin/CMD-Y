@@ -20,7 +20,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from app import agent, llm, store
+from app import agent, configure_output, llm, store
 from harness import cases as case_lib
 from harness import score as scorer
 
@@ -151,6 +151,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    configure_output()
     args = build_parser().parse_args(argv)
 
     # Select cases.
@@ -219,6 +220,13 @@ def main(argv: list[str] | None = None) -> int:
     (out / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     print_summary(summary)
     print(f"\nWrote {out / 'summary.json'}")
+
+    # Every trial failing means a setup problem, not a 0% result.
+    if records and summary["overall"]["errored_trials"] == len(records):
+        first_error = records[0]["trace"]["error"]
+        print(f"\nWARNING: all {len(records)} trials errored ({first_error}).", file=sys.stderr)
+        print("Check OLLAMA_API_KEY in .env (or `ollama signin`), or use --mock.", file=sys.stderr)
+        return 1
     return 0
 
 

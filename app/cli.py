@@ -11,7 +11,7 @@ import argparse
 import json
 import sys
 
-from app import agent, llm, store, tools
+from app import agent, configure_output, llm, store, tools
 
 
 def cmd_ticket(args: argparse.Namespace) -> int:
@@ -110,6 +110,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    configure_output()
     args = build_parser().parse_args(argv)
     return args.func(args)
 

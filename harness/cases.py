@@ -66,7 +66,7 @@ def load_cases(paths: list[Path] | None = None) -> list[Case]:
     seen_tickets: set = set()
 
     for path in paths:
-        for raw in json.loads(Path(path).read_text(encoding="utf-8")):
+        for raw in json.loads(Path(path).read_text(encoding=store.READ_ENCODING)):
             case = Case(**raw)
             _validate(case, customers, seen_ids, seen_tickets)
             seen_ids.add(case.id)
