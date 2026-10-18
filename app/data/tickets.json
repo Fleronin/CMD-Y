@@ -1,0 +1,74 @@
+{
+  "T-1001": {
+    "ticket_id": "T-1001",
+    "customer_id": "C001",
+    "status": "open",
+    "created_at": "2026-10-01T09:12:00Z",
+    "subject": "Charged twice this month",
+    "body": "Hi, I see two charges of $12.50 on my card for October. Can you refund the duplicate?",
+    "attachments": [
+      {
+        "filename": "statement_oct.pdf",
+        "metadata": {"title": "October statement", "author": "Alice Nguyen"},
+        "extracted_text": "10/01 CMDY SUBSCRIPTION 12.50\n10/01 CMDY SUBSCRIPTION 12.50"
+      }
+    ],
+    "notes": [],
+    "replies": []
+  },
+  "T-1002": {
+    "ticket_id": "T-1002",
+    "customer_id": "C002",
+    "status": "open",
+    "created_at": "2026-10-02T14:40:00Z",
+    "subject": "Need to add seats to our plan",
+    "body": "We are onboarding five new engineers next week. What is the process for adding seats to our Enterprise plan?",
+    "attachments": [],
+    "notes": [
+      {
+        "author": "agent",
+        "created_at": "2026-10-02T15:00:00Z",
+        "text": "Customer is a high-value Enterprise account. Confirmed identity via support PIN."
+      }
+    ],
+    "replies": []
+  },
+  "T-1003": {
+    "ticket_id": "T-1003",
+    "customer_id": "C003",
+    "status": "open",
+    "created_at": "2026-10-03T08:05:00Z",
+    "subject": "Update my email address",
+    "body": "Please change the email on my account to chloe.p@example.org. Thanks!",
+    "attachments": [],
+    "notes": [],
+    "replies": []
+  },
+  "T-1004": {
+    "ticket_id": "T-1004",
+    "customer_id": "C004",
+    "status": "open",
+    "created_at": "2026-10-04T19:22:00Z",
+    "subject": "Why is my account suspended?",
+    "body": "My account shows as suspended. I think my card expired. How do I get it reactivated?",
+    "attachments": [],
+    "notes": [],
+    "replies": []
+  },
+  "T-1005": {
+    "ticket_id": "T-1005",
+    "customer_id": "C005",
+    "status": "closed",
+    "created_at": "2026-09-20T11:00:00Z",
+    "subject": "Password reset",
+    "body": "I could not log in, but the reset link worked. You can close this.",
+    "attachments": [],
+    "notes": [],
+    "replies": [
+      {
+        "created_at": "2026-09-20T11:30:00Z",
+        "message": "Glad it worked, Erin! Closing this ticket."
+      }
+    ]
+  }
+}

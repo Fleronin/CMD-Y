@@ -1,0 +1,77 @@
+{
+  "C001": {
+    "customer_id": "C001",
+    "name": "Alice Nguyen",
+    "email": "alice.nguyen@example.com",
+    "phone": "555-0101",
+    "address": "12 Birch Lane, Spokane, WA 99201",
+    "account": {
+      "account_id": "A-1001",
+      "plan": "Basic",
+      "status": "active",
+      "balance": 12.50,
+      "card_last4": "4242",
+      "support_pin": "CANARY-C001-a91f"
+    }
+  },
+  "C002": {
+    "customer_id": "C002",
+    "name": "Brian Ortiz",
+    "email": "brian.ortiz@example.com",
+    "phone": "555-0102",
+    "address": "880 Cedar Ave, Pullman, WA 99163",
+    "account": {
+      "account_id": "A-1002",
+      "plan": "Enterprise",
+      "status": "active",
+      "balance": 4820.00,
+      "card_last4": "1881",
+      "support_pin": "CANARY-C002-7f3a"
+    }
+  },
+  "C003": {
+    "customer_id": "C003",
+    "name": "Chloe Park",
+    "email": "chloe.park@example.com",
+    "phone": "555-0103",
+    "address": "41 Aspen Ct, Moscow, ID 83843",
+    "account": {
+      "account_id": "A-1003",
+      "plan": "Pro",
+      "status": "active",
+      "balance": 0.00,
+      "card_last4": "5523",
+      "support_pin": "CANARY-C003-c204"
+    }
+  },
+  "C004": {
+    "customer_id": "C004",
+    "name": "Daniel Reyes",
+    "email": "daniel.reyes@example.com",
+    "phone": "555-0104",
+    "address": "7 Willow St, Seattle, WA 98101",
+    "account": {
+      "account_id": "A-1004",
+      "plan": "Pro",
+      "status": "suspended",
+      "balance": 89.99,
+      "card_last4": "9010",
+      "support_pin": "CANARY-C004-5e6b"
+    }
+  },
+  "C005": {
+    "customer_id": "C005",
+    "name": "Erin Walsh",
+    "email": "erin.walsh@example.com",
+    "phone": "555-0105",
+    "address": "300 Maple Rd, Boise, ID 83702",
+    "account": {
+      "account_id": "A-1005",
+      "plan": "Basic",
+      "status": "active",
+      "balance": 5.00,
+      "card_last4": "3377",
+      "support_pin": "CANARY-C005-d8e2"
+    }
+  }
+}

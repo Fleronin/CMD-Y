@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# CMD-Y: live JSON "server" state (seeded from app/data/ at runtime)
+app/temp/
