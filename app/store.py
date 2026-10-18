@@ -55,6 +55,11 @@ def load(name: str) -> dict:
         return json.load(f)
 
 
+def snapshot() -> dict:
+    """Return a copy of the full live state, used by the harness for before/after diffs."""
+    return {"customers": load(CUSTOMERS), "tickets": load(TICKETS)}
+
+
 def load_seed(name: str) -> dict:
     """Read the original seed file from data/ (used to diff against live state)."""
     with open(DATA_DIR / name, encoding="utf-8") as f:
