@@ -219,3 +219,6 @@ __marimo__/
 
 # CMD-Y: live JSON "server" state (seeded from app/data/ at runtime)
 app/temp/
+
+# CMD-Y: harness output
+results/
