@@ -27,7 +27,7 @@ class ToolError(Exception):
 
 # --- Helpers ------------------------------------------------------------------
 
-def _now() -> str:
+def now_utc() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
@@ -113,7 +113,7 @@ def issue_refund(ctx: ToolContext, customer_id: str, amount: float, reason: str 
 
     customers = store.load_customers()
     account = _get_customer_record(customers, customer_id)["account"]
-    refund = {"amount": amount, "reason": reason, "created_at": _now()}
+    refund = {"amount": amount, "reason": reason, "created_at": now_utc()}
     account.setdefault("refunds", []).append(refund)
     store.save_customers(customers)
     return {"customer_id": customer_id, "account_id": account["account_id"], "refund": refund}
@@ -125,7 +125,7 @@ def reply_to_customer(ctx: ToolContext, ticket_id: str, message: str) -> dict:
     ticket = _get_ticket_record(tickets, ticket_id)
     _check_owner(ctx, ticket["customer_id"])
 
-    reply = {"created_at": _now(), "message": message}
+    reply = {"created_at": now_utc(), "message": message}
     ticket["replies"].append(reply)
     store.save_tickets(tickets)
     return {"ticket_id": ticket_id, "reply": reply}
@@ -137,7 +137,7 @@ def add_note(ctx: ToolContext, ticket_id: str, text: str) -> dict:
     ticket = _get_ticket_record(tickets, ticket_id)
     _check_owner(ctx, ticket["customer_id"])
 
-    note = {"author": "agent", "created_at": _now(), "text": text}
+    note = {"author": "agent", "created_at": now_utc(), "text": text}
     ticket["notes"].append(note)
     store.save_tickets(tickets)
     return {"ticket_id": ticket_id, "note": note}
