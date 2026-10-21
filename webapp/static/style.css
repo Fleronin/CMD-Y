@@ -161,3 +161,32 @@ ul { list-style: none; margin: 0; padding: 0; }
 }
 #ticket-detail ul { display: flex; flex-direction: column; gap: 0.6rem; }
 #ticket-detail li { list-style: none; }
+
+.verdict {
+  font-weight: 600;
+  padding: 0.5rem 0.7rem;
+  border-radius: 6px;
+  margin: 0;
+}
+.verdict.ok { background: var(--ok-bg); color: var(--ok); }
+.verdict.violation { background: var(--danger-bg); color: var(--danger); }
+.verdict-detail { margin: 0.4rem 0 0; padding-left: 1.2rem; font-size: 0.85rem; color: var(--danger); }
+
+.trace { display: flex; flex-direction: column; gap: 0.5rem; }
+.trace li {
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+}
+.trace li.violation { border-color: var(--danger); background: var(--danger-bg); }
+.trace .tool-name { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; }
+.trace pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  font-size: 0.78rem;
+  background: var(--bg);
+  border-radius: 4px;
+  padding: 0.4rem;
+}

@@ -155,6 +155,87 @@ async function selectTicket(ticketId) {
   document.getElementById("run-result").innerHTML = "";
 }
 
+function violatingSteps(score) {
+  const steps = new Set(score.authz_violations.map((v) => v.step));
+  for (const leak of score.confidentiality_leaks) {
+    const match = leak.where.match(/step(\d+)/);
+    if (match) steps.add(Number(match[1]));
+  }
+  return steps;
+}
+
+function renderToolCall(call, isViolation) {
+  return `
+    <li class="${isViolation ? "violation" : ""}">
+      <span class="tool-name">step ${call.step}: ${escapeHtml(call.name)}(${escapeHtml(JSON.stringify(call.args))})</span>
+      <pre>${escapeHtml(JSON.stringify(call.result, null, 2))}</pre>
+    </li>
+  `;
+}
+
+function renderScoreSummary(score) {
+  if (!score.any_violation) {
+    return `<p class="verdict ok">No authorization, confidentiality, or state violations detected.</p>`;
+  }
+  const lines = [];
+  if (score.authz_violation) {
+    lines.push(`<li>Authorization: ${score.authz_violations.length} cross-customer call(s) succeeded
+      (${score.authz_violations.map((v) => `${escapeHtml(v.name)} -> ${escapeHtml(v.owner)}`).join(", ")}).</li>`);
+  }
+  if (score.confidentiality_violation) {
+    lines.push(`<li>Confidentiality: leaked ${score.confidentiality_leaks
+      .map((l) => `${escapeHtml(l.owner)}'s ${escapeHtml(l.field)}`).join(", ")}.</li>`);
+  }
+  if (score.state_violation) {
+    lines.push(`<li>State: ${score.state_changes.length} field(s) changed on another customer's record
+      (${score.state_changes.map((c) => escapeHtml(c.path)).join(", ")}).</li>`);
+  }
+  return `<p class="verdict violation">Violation detected.</p><ul class="verdict-detail">${lines.join("")}</ul>`;
+}
+
+function renderRunResult({ trace, score }) {
+  const result = document.getElementById("run-result");
+  const steps = violatingSteps(score);
+
+  if (trace.error) {
+    result.innerHTML = `<p class="verdict violation">Run error: ${escapeHtml(trace.error)}</p>`;
+    return;
+  }
+
+  result.innerHTML = `
+    ${renderScoreSummary(score)}
+    <h3>Tool calls</h3>
+    <ul class="trace">${trace.tool_calls.map((c) => renderToolCall(c, steps.has(c.step))).join("") || "<li>none</li>"}</ul>
+    <h3>Final response</h3>
+    <pre>${escapeHtml(trace.final_response)}</pre>
+  `;
+}
+
+async function runAgent() {
+  const button = document.getElementById("run-btn");
+  const result = document.getElementById("run-result");
+  const payload = {
+    submitter_id: document.getElementById("run-submitter").value,
+    mock: document.getElementById("run-mock").checked,
+    enforce_authz: document.getElementById("run-authz").checked,
+  };
+
+  button.disabled = true;
+  result.innerHTML = `<p class="placeholder">Running...</p>`;
+  try {
+    const data = await api(`/api/tickets/${encodeURIComponent(state.selectedTicketId)}/run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    renderRunResult(data);
+  } catch (err) {
+    result.innerHTML = `<p class="verdict violation">${escapeHtml(err.message)}</p>`;
+  } finally {
+    button.disabled = false;
+  }
+}
+
 async function submitTicket(event) {
   event.preventDefault();
   const status = document.getElementById("submit-status");
@@ -186,6 +267,7 @@ async function init() {
   await loadCustomers();
   await loadTickets();
   document.getElementById("submit-form").addEventListener("submit", submitTicket);
+  document.getElementById("run-btn").addEventListener("click", runAgent);
 }
 
 document.addEventListener("DOMContentLoaded", init);
