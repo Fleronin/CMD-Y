@@ -155,10 +155,37 @@ async function selectTicket(ticketId) {
   document.getElementById("run-result").innerHTML = "";
 }
 
+async function submitTicket(event) {
+  event.preventDefault();
+  const status = document.getElementById("submit-status");
+  const customerId = document.getElementById("submit-customer").value;
+  const subject = document.getElementById("submit-subject").value;
+  const body = document.getElementById("submit-body").value;
+
+  status.textContent = "Filing...";
+  status.className = "";
+  try {
+    const ticket = await api("/api/tickets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ customer_id: customerId, subject, body }),
+    });
+    status.textContent = `Filed ${ticket.ticket_id}.`;
+    document.getElementById("submit-form").reset();
+    document.getElementById("submit-customer").value = customerId;
+    await loadTickets();
+    await selectTicket(ticket.ticket_id);
+  } catch (err) {
+    status.textContent = err.message;
+    status.className = "error";
+  }
+}
+
 async function init() {
   await loadConfig();
   await loadCustomers();
   await loadTickets();
+  document.getElementById("submit-form").addEventListener("submit", submitTicket);
 }
 
 document.addEventListener("DOMContentLoaded", init);

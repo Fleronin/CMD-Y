@@ -121,6 +121,9 @@ ul { list-style: none; margin: 0; padding: 0; }
 
 .placeholder { color: var(--muted); }
 
+#submit-status { margin: 0; font-size: 0.82rem; color: var(--ok); min-height: 1.1em; }
+#submit-status.error { color: var(--danger); }
+
 #run-panel {
   margin-top: 1.25rem;
   padding-top: 1rem;
