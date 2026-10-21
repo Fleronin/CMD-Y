@@ -19,6 +19,7 @@ from harness import score as scorer
 
 
 def create_app() -> Flask:
+    llm.load_env()  # so /api/config can see OLLAMA_API_KEY from .env, not just the real environment
     app = Flask(__name__)
 
     @app.get("/")
@@ -99,6 +100,21 @@ def create_app() -> Flask:
                                    or result["state_violation"])
 
         return jsonify({"trace": trace.to_dict(), "score": result})
+
+    @app.post("/api/reset")
+    def api_reset():
+        """Reset button: restore the live store to the seed data."""
+        store.reset()
+        return jsonify({"ok": True})
+
+    @app.get("/api/config")
+    def api_config():
+        """Tells the frontend whether a real model is reachable, so it knows
+        whether to default the run toggle to mock or real."""
+        return jsonify({
+            "default_model": llm.DEFAULT_MODEL,
+            "real_model_available": llm.uses_direct_cloud(),
+        })
 
     return app
 
