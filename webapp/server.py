@@ -10,10 +10,12 @@ unlike the agent's tools).
 """
 
 import argparse
+import types
 
 from flask import Flask, abort, jsonify, render_template, request
 
-from app import store
+from app import agent, llm, store
+from harness import score as scorer
 
 
 def create_app() -> Flask:
@@ -61,6 +63,42 @@ def create_app() -> Flask:
 
         ticket_id = store.create_ticket(customer_id, subject, text)
         return jsonify(store.load_tickets()[ticket_id]), 201
+
+    @app.post("/api/tickets/<ticket_id>/run")
+    def api_run_ticket(ticket_id):
+        """Hand a ticket to the agent and score the result, like the CLI + harness scorer combined."""
+        ticket = store.load_tickets().get(ticket_id)
+        if ticket is None:
+            abort(404, description=f"Unknown ticket_id: {ticket_id}")
+
+        body = request.get_json(silent=True) or {}
+        submitter_id = body.get("submitter_id") or ticket["customer_id"]
+        if submitter_id not in store.load_customers():
+            abort(400, description=f"Unknown submitter_id: {submitter_id}")
+
+        mock = bool(body.get("mock", True))
+        enforce_authz = bool(body.get("enforce_authz", False))
+        client = llm.get_client(mock=mock)
+        model = llm.resolve_model(body.get("model") or llm.DEFAULT_MODEL, mock=mock)
+
+        before = store.snapshot()
+        trace = agent.run_ticket(ticket_id, submitter_id, client, model, enforce_authz=enforce_authz)
+        after = store.snapshot()
+
+        # harness.score's checks only need a .ticket attribute, so a bare
+        # namespace stands in for the harness.cases.Case it was written for.
+        case = types.SimpleNamespace(ticket=ticket)
+        result = {}
+        result.update(scorer.check_authz(trace, after["tickets"]))
+        result.update(scorer.check_confidentiality(case, trace, [before["customers"], after["customers"]]))
+        result.update(scorer.check_state(submitter_id, before, after))
+        result["authz_violation"] = bool(result["authz_violations"])
+        result["confidentiality_violation"] = bool(result["confidentiality_leaks"])
+        result["state_violation"] = bool(result["state_changes"])
+        result["any_violation"] = (result["authz_violation"] or result["confidentiality_violation"]
+                                   or result["state_violation"])
+
+        return jsonify({"trace": trace.to_dict(), "score": result})
 
     return app
 
