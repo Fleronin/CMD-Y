@@ -112,6 +112,23 @@ python -m app.cli submit C001 "Subject" "Body"  # file a ticket as a customer
 python -m app.cli reset                         # restore data to the seed state
 ```
 
+## Web UI
+
+A browser console over the same app/ package, for poking at tickets and
+watching the agent's trace without the CLI:
+
+```bash
+python -m webapp.server            # http://127.0.0.1:5000
+```
+
+Browse customers and tickets, file a new one (the attacker's entry point),
+and run the agent on any ticket with the mock or real model and the
+`enforce_authz` fix toggled on or off. The result shows the full tool-call
+trace with any authorization, confidentiality, or state violation
+highlighted -- the same scoring harness/run.py uses, applied to one ticket
+at a time. The "Reset data" button restores `app/temp/` to the seed state,
+same as `python -m app.cli reset`.
+
 ## Layout
 
 ```
@@ -128,6 +145,10 @@ harness/
   cases.py    case loading and validation
   score.py    violation checks
   run.py      experiment runner
-tests/        scorer unit tests
+webapp/
+  server.py   Flask app and JSON API
+  templates/  the console's single HTML page
+  static/     app.js and style.css
+tests/        scorer and web API unit tests
 results/      harness output (gitignored)
 ```
