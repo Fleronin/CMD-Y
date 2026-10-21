@@ -11,7 +11,9 @@ unlike the agent's tools).
 
 import argparse
 
-from flask import Flask, render_template
+from flask import Flask, abort, jsonify, render_template, request
+
+from app import store
 
 
 def create_app() -> Flask:
@@ -20,6 +22,29 @@ def create_app() -> Flask:
     @app.get("/")
     def index():
         return render_template("index.html")
+
+    @app.get("/api/customers")
+    def api_customers():
+        """All customers, full records: this console has god-mode access to the store."""
+        customers = store.load_customers()
+        return jsonify(sorted(customers.values(), key=lambda c: c["customer_id"]))
+
+    @app.get("/api/tickets")
+    def api_tickets():
+        """Tickets, optionally filtered to one customer via ?customer_id=."""
+        customer_id = request.args.get("customer_id")
+        tickets = list(store.load_tickets().values())
+        if customer_id:
+            tickets = [t for t in tickets if t["customer_id"] == customer_id]
+        tickets.sort(key=lambda t: t["created_at"])
+        return jsonify(tickets)
+
+    @app.get("/api/tickets/<ticket_id>")
+    def api_ticket(ticket_id):
+        ticket = store.load_tickets().get(ticket_id)
+        if ticket is None:
+            abort(404, description=f"Unknown ticket_id: {ticket_id}")
+        return jsonify(ticket)
 
     return app
 
