@@ -143,3 +143,18 @@ ul { list-style: none; margin: 0; padding: 0; }
 }
 
 #run-result { margin-top: 1rem; }
+
+#ticket-detail h2 { margin: 0 0 0.25rem; font-size: 1.05rem; }
+#ticket-detail h3 { margin: 1rem 0 0.4rem; font-size: 0.85rem; color: var(--muted); }
+#ticket-detail pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.6rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+#ticket-detail ul { display: flex; flex-direction: column; gap: 0.6rem; }
+#ticket-detail li { list-style: none; }

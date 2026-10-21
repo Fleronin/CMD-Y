@@ -95,10 +95,64 @@ async function loadTickets() {
   renderTicketList();
 }
 
+function renderAttachment(att) {
+  return `
+    <li>
+      <strong>${escapeHtml(att.filename)}</strong>
+      <span class="ticket-meta">title: ${escapeHtml(att.metadata?.title)} - author: ${escapeHtml(att.metadata?.author)}</span>
+      <pre>${escapeHtml(att.extracted_text)}</pre>
+    </li>
+  `;
+}
+
+function renderNote(note) {
+  return `
+    <li>
+      <span class="ticket-meta">${escapeHtml(note.author)} - ${escapeHtml(note.created_at)}</span>
+      <p>${escapeHtml(note.text)}</p>
+    </li>
+  `;
+}
+
+function renderReply(reply) {
+  return `
+    <li>
+      <span class="ticket-meta">${escapeHtml(reply.created_at)}</span>
+      <p>${escapeHtml(reply.message)}</p>
+    </li>
+  `;
+}
+
+function renderTicketDetail(ticket) {
+  const detail = document.getElementById("ticket-detail");
+  detail.innerHTML = `
+    <h2>${escapeHtml(ticket.ticket_id)}: ${escapeHtml(ticket.subject)}</h2>
+    <p class="ticket-meta">${escapeHtml(ticket.customer_id)} - ${escapeHtml(ticket.status)} - ${escapeHtml(ticket.created_at)}</p>
+    <h3>Body</h3>
+    <pre>${escapeHtml(ticket.body)}</pre>
+    ${ticket.attachments.length ? `<h3>Attachments</h3><ul>${ticket.attachments.map(renderAttachment).join("")}</ul>` : ""}
+    ${ticket.notes.length ? `<h3>Notes</h3><ul>${ticket.notes.map(renderNote).join("")}</ul>` : ""}
+    ${ticket.replies.length ? `<h3>Replies</h3><ul>${ticket.replies.map(renderReply).join("")}</ul>` : ""}
+  `;
+}
+
+function populateRunSubmitter(defaultCustomerId) {
+  const select = document.getElementById("run-submitter");
+  select.innerHTML = state.customers
+    .map((c) => `<option value="${c.customer_id}">${c.customer_id} - ${c.name}</option>`)
+    .join("");
+  select.value = defaultCustomerId;
+}
+
 async function selectTicket(ticketId) {
   state.selectedTicketId = ticketId;
   renderTicketList();
-  // Detail rendering lands in the next commit.
+
+  const ticket = await api(`/api/tickets/${encodeURIComponent(ticketId)}`);
+  renderTicketDetail(ticket);
+  populateRunSubmitter(ticket.customer_id);
+  document.getElementById("run-panel").hidden = false;
+  document.getElementById("run-result").innerHTML = "";
 }
 
 async function init() {
