@@ -9,6 +9,7 @@ import json
 import os
 import tempfile
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 APP_DIR = Path(__file__).resolve().parent
@@ -138,3 +139,27 @@ def save_customers(data: dict) -> None:
 
 def save_tickets(data: dict) -> None:
     save(TICKETS, data)
+
+
+def create_ticket(customer_id: str, subject: str, body: str) -> str:
+    """File a new ticket for a customer and return its ID.
+
+    Shared by the CLI's `submit` command and the web UI, so the ticket-ID
+    scheme (next T-NNNN after the highest existing one) only lives in one
+    place. The caller is responsible for checking that customer_id exists.
+    """
+    tickets = load_tickets()
+    ticket_id = f"T-{max(int(t.split('-')[1]) for t in tickets) + 1}"
+    tickets[ticket_id] = {
+        "ticket_id": ticket_id,
+        "customer_id": customer_id,
+        "status": "open",
+        "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "subject": subject,
+        "body": body,
+        "attachments": [],
+        "notes": [],
+        "replies": [],
+    }
+    save_tickets(tickets)
+    return ticket_id

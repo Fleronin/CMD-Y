@@ -11,7 +11,7 @@ import argparse
 import json
 import sys
 
-from app import agent, configure_output, llm, store, tools
+from app import agent, configure_output, llm, store
 
 
 def cmd_ticket(args: argparse.Namespace) -> int:
@@ -57,20 +57,7 @@ def cmd_submit(args: argparse.Namespace) -> int:
         print(f"Unknown customer: {args.customer_id}", file=sys.stderr)
         return 1
 
-    tickets = store.load_tickets()
-    ticket_id = f"T-{max(int(t.split('-')[1]) for t in tickets) + 1}"
-    tickets[ticket_id] = {
-        "ticket_id": ticket_id,
-        "customer_id": args.customer_id,
-        "status": "open",
-        "created_at": tools.now_utc(),
-        "subject": args.subject,
-        "body": args.body,
-        "attachments": [],
-        "notes": [],
-        "replies": [],
-    }
-    store.save_tickets(tickets)
+    ticket_id = store.create_ticket(args.customer_id, args.subject, args.body)
     print(ticket_id)
     return 0
 
