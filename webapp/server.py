@@ -46,6 +46,22 @@ def create_app() -> Flask:
             abort(404, description=f"Unknown ticket_id: {ticket_id}")
         return jsonify(ticket)
 
+    @app.post("/api/tickets")
+    def api_submit_ticket():
+        """File a new ticket as a customer: the attacker's only entry point."""
+        body = request.get_json(silent=True) or {}
+        customer_id = (body.get("customer_id") or "").strip()
+        subject = (body.get("subject") or "").strip()
+        text = (body.get("body") or "").strip()
+
+        if customer_id not in store.load_customers():
+            abort(400, description=f"Unknown customer_id: {customer_id}")
+        if not subject or not text:
+            abort(400, description="subject and body are required")
+
+        ticket_id = store.create_ticket(customer_id, subject, text)
+        return jsonify(store.load_tickets()[ticket_id]), 201
+
     return app
 
 
