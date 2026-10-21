@@ -262,12 +262,31 @@ async function submitTicket(event) {
   }
 }
 
+async function resetData() {
+  const button = document.getElementById("reset-btn");
+  button.disabled = true;
+  try {
+    await api("/api/reset", { method: "POST" });
+    state.selectedCustomerId = null;
+    state.selectedTicketId = null;
+    document.getElementById("ticket-detail").innerHTML =
+      `<p class="placeholder">Select a ticket on the left to see its contents and run the agent on it.</p>`;
+    document.getElementById("run-panel").hidden = true;
+    document.getElementById("run-result").innerHTML = "";
+    await loadCustomers();
+    await loadTickets();
+  } finally {
+    button.disabled = false;
+  }
+}
+
 async function init() {
   await loadConfig();
   await loadCustomers();
   await loadTickets();
   document.getElementById("submit-form").addEventListener("submit", submitTicket);
   document.getElementById("run-btn").addEventListener("click", runAgent);
+  document.getElementById("reset-btn").addEventListener("click", resetData);
 }
 
 document.addEventListener("DOMContentLoaded", init);
