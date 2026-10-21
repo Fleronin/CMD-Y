@@ -1,6 +1,8 @@
 const state = {
   customers: [],
+  tickets: [],
   selectedCustomerId: null,
+  selectedTicketId: null,
 };
 
 async function api(path, options) {
@@ -10,6 +12,15 @@ async function api(path, options) {
     throw new Error(body.description || `${resp.status} ${resp.statusText}`);
   }
   return resp.status === 204 ? null : resp.json();
+}
+
+// Ticket subjects/bodies are attacker-controlled (that's the whole point of
+// this project), so anything from them goes through this before it lands in
+// innerHTML rather than being trusted as markup.
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text ?? "";
+  return div.innerHTML;
 }
 
 async function loadConfig() {
@@ -48,9 +59,10 @@ function renderCustomerSelects() {
     .join("");
 }
 
-function selectCustomer(customerId) {
+async function selectCustomer(customerId) {
   state.selectedCustomerId = customerId;
   renderCustomerList();
+  await loadTickets();
 }
 
 async function loadCustomers() {
@@ -59,9 +71,40 @@ async function loadCustomers() {
   renderCustomerSelects();
 }
 
+function renderTicketList() {
+  const heading = document.getElementById("tickets-heading");
+  heading.textContent = state.selectedCustomerId ? `Tickets for ${state.selectedCustomerId}` : "All tickets";
+
+  const list = document.getElementById("ticket-list");
+  list.innerHTML = "";
+  for (const ticket of state.tickets) {
+    const li = document.createElement("li");
+    li.className = ticket.ticket_id === state.selectedTicketId ? "active" : "";
+    li.innerHTML = `
+      <span class="ticket-subject">${escapeHtml(ticket.subject)}</span>
+      <span class="ticket-meta">${ticket.ticket_id} - ${ticket.customer_id} - ${ticket.status}</span>
+    `;
+    li.addEventListener("click", () => selectTicket(ticket.ticket_id));
+    list.appendChild(li);
+  }
+}
+
+async function loadTickets() {
+  const query = state.selectedCustomerId ? `?customer_id=${encodeURIComponent(state.selectedCustomerId)}` : "";
+  state.tickets = await api(`/api/tickets${query}`);
+  renderTicketList();
+}
+
+async function selectTicket(ticketId) {
+  state.selectedTicketId = ticketId;
+  renderTicketList();
+  // Detail rendering lands in the next commit.
+}
+
 async function init() {
   await loadConfig();
   await loadCustomers();
+  await loadTickets();
 }
 
 document.addEventListener("DOMContentLoaded", init);
