@@ -7,7 +7,66 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <h1>CMD-Y console</h1>
-  <p>Coming soon.</p>
+  <header>
+    <h1>CMD-Y console</h1>
+    <span id="config-badge" class="badge">loading...</span>
+    <button id="reset-btn">Reset data</button>
+  </header>
+
+  <div class="layout">
+    <aside id="customers-pane">
+      <h2>Customers</h2>
+      <ul id="customer-list"></ul>
+
+      <h2>File a new ticket</h2>
+      <form id="submit-form">
+        <label>
+          As customer
+          <select id="submit-customer" required></select>
+        </label>
+        <label>
+          Subject
+          <input id="submit-subject" type="text" required>
+        </label>
+        <label>
+          Body
+          <textarea id="submit-body" rows="4" required></textarea>
+        </label>
+        <button type="submit">File ticket</button>
+      </form>
+    </aside>
+
+    <section id="tickets-pane">
+      <h2 id="tickets-heading">All tickets</h2>
+      <ul id="ticket-list"></ul>
+    </section>
+
+    <section id="detail-pane">
+      <div id="ticket-detail">
+        <p class="placeholder">Select a ticket on the left to see its contents and run the agent on it.</p>
+      </div>
+
+      <div id="run-panel" hidden>
+        <h3>Run agent</h3>
+        <label>
+          Submit as
+          <select id="run-submitter"></select>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="run-mock" checked>
+          Mock model (offline, obeys any injection)
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="run-authz">
+          Enforce authz (server-side ownership checks)
+        </label>
+        <button id="run-btn">Run agent</button>
+      </div>
+
+      <div id="run-result"></div>
+    </section>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
