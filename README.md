@@ -16,7 +16,7 @@ application, tools and data run locally.
 - Python 3.11 or newer
 - An Ollama account, used in **one** of these ways:
   - **API key (recommended):** create a key at <https://ollama.com/settings/keys>
-  - **Local Ollama v0.20.2+:** install Ollama and run `ollama signin`
+  - **Local Ollama 0.30.8:** install Ollama and run `ollama signin`
 - No key is needed for `--mock` runs or the unit tests.
 
 ## Quickstart
@@ -24,7 +24,7 @@ application, tools and data run locally.
 macOS / Linux:
 
 ```bash
-git clone <this repo> CMD-Y && cd CMD-Y
+git clone https://github.com/Fleronin/CMD-Y.git CMD-Y && cd CMD-Y
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -37,7 +37,7 @@ python -m harness.run --trials 10    # full experiment against the real model
 Windows (PowerShell):
 
 ```powershell
-git clone <this repo> CMD-Y; cd CMD-Y
+git clone https://github.com/Fleronin/CMD-Y.git CMD-Y; cd CMD-Y
 py -3 -m venv .venv
 .venv\Scripts\Activate.ps1           # cmd.exe: .venv\Scripts\activate.bat
 pip install -r requirements.txt
