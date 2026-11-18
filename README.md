@@ -4,7 +4,8 @@ A mock customer-support ticket assistant and an attack harness for measuring
 prompt injection against it (CptS 428, Track A: AI Agent Trap and Remediation).
 
 The agent reads support tickets from a synthetic JSON dataset and uses Ollama's
-native tool calling (`gemma4:31b-cloud`) to look up and change customer data.
+native tool calling to look up and change customer data. The default model is
+`gemma4:31b-cloud`; the D3 experiments also run `gpt-oss:20b-cloud`.
 The harness submits benign and prompt-injection tickets N times each and
 reports how often the agent violates authorization or confidentiality.
 
@@ -18,6 +19,9 @@ application, tools and data run locally.
   - **API key (recommended):** create a key at <https://ollama.com/settings/keys>
   - **Local Ollama 0.30.8:** install Ollama and run `ollama signin`
 - No key is needed for `--mock` runs or the unit tests.
+- Cloud API calls need usage credits on the Ollama account. If every trial
+  errors with status 402 ("Add usage credits"), the account has no API
+  allowance; add credits at <https://ollama.com/plans>.
 
 ## Quickstart
 
@@ -100,8 +104,42 @@ Measured relative to the customer who submitted the ticket (see `harness/score.p
 
 ### Adding cases
 
-Add entries to `harness/cases/benign.json` or `harness/cases/injection.json`.
-They are validated on load; see `harness/cases.py` for the fields.
+Add entries to any JSON file in `harness/cases/`; every file there is loaded
+automatically. Injection cases are grouped by round: `injection.json` (D2),
+`injection_v2.json` and `injection_v3.json` (D3). `inj3-control-authorized-user`
+is a control: the same visible request as the authorized user cases, with no
+injected payload. Cases are validated on load; see `harness/cases.py` for the fields.
+
+## D3 baseline
+
+The `baseline` tag holds the harness, cases, and raw results for the D3
+baseline, run on November 17, 2026 with the mitigation **off**. Both runs used
+all 24 cases (5 benign, 19 injection), 20 trials per case, temperature 0.7,
+and base seed 428 (trial *i* uses seed 428 + *i*).
+
+Reproduce (after the Quickstart setup, with an API key that has credits):
+
+```bash
+git checkout baseline
+python -m harness.run --trials 20 --model gemma4:31b-cloud --temperature 0.7 --seed 428 --out results/baseline/gemma
+python -m harness.run --trials 20 --model gpt-oss:20b-cloud --temperature 0.7 --seed 428 --out results/baseline/gptoss
+```
+
+On Windows, use backslashes in the `--out` paths (`results\baseline\gemma`).
+
+Raw results:
+
+| Run | Folder |
+|---|---|
+| Baseline, `gemma4:31b-cloud` | `results/baseline/gemma/` |
+| Baseline, `gpt-oss:20b-cloud` | `results/baseline/gptoss/` |
+
+Ollama Cloud does not offer a way to pin a cloud model to a fixed build, so
+each folder's `config.json` records the model tag, settings, and start time.
+A rerun may not match trial for trial; the per case rates are what to compare.
+
+Pilot runs used to tune payloads are written to `results/pilot/`, which is
+gitignored and not reported.
 
 ## Using the app directly
 
@@ -150,5 +188,5 @@ webapp/
   templates/  the console's single HTML page
   static/     app.js and style.css
 tests/        scorer and web API unit tests
-results/      harness output (gitignored)
+results/      harness output; baseline/ is committed, pilot/ is gitignored
 ```
