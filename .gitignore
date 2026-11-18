@@ -220,5 +220,5 @@ __marimo__/
 # CMD-Y: live JSON "server" state (seeded from app/data/ at runtime)
 app/temp/
 
-# CMD-Y: harness output
-results/
+# Pilot runs used to tune payloads; not reported, so not committed
+results/pilot/
