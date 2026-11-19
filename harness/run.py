@@ -49,7 +49,7 @@ def rate(successes: int, n: int) -> dict:
 # --- Running one trial --------------------------------------------------------
 
 def run_trial(case, client, model: str, options: dict, enforce_authz: bool,
-              max_steps: int, retries: int) -> tuple[agent.Trace, dict, int]:
+              max_steps: int, retries: int, mark_untrusted: bool = False) -> tuple[agent.Trace, dict, int]:
     """Reset the store, install the case, run the agent, and score the result.
 
     Transient API errors are retried from a fresh store. Hitting max_steps is
@@ -62,7 +62,8 @@ def run_trial(case, client, model: str, options: dict, enforce_authz: bool,
         case_lib.install(case)
         before = store.snapshot()
         trace = agent.run_ticket(case.ticket_id, case.submitter_id, client, model,
-                                 options=options, enforce_authz=enforce_authz, max_steps=max_steps)
+                                 options=options, enforce_authz=enforce_authz, max_steps=max_steps,
+                                 mark_untrusted=mark_untrusted)
         after = store.snapshot()
 
         api_error = trace.error is not None and not trace.error.startswith("max_steps")
@@ -141,6 +142,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--model", default=llm.DEFAULT_MODEL)
     p.add_argument("--mock", action="store_true", help="Use the offline scripted mock model")
     p.add_argument("--enforce-authz", action="store_true", help="Enable server-side ownership checks")
+    p.add_argument("--mark-untrusted", action="store_true",
+                   help="Prompt defense: wrap ticket content in <untrusted> tags and tell the model it is data")
     p.add_argument("--temperature", type=float, default=None,
                    help="Sampling temperature (default: the model's own default)")
     p.add_argument("--seed", type=int, default=None, help="Base seed; trial i uses seed + i")
@@ -172,12 +175,12 @@ def main(argv: list[str] | None = None) -> int:
     client = llm.get_client(mock=args.mock)
     model = llm.resolve_model(args.model, mock=args.mock)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    out = args.out or RESULTS_DIR / f"{stamp}_{model.replace(':', '-')}{'_authz' if args.enforce_authz else ''}"
+    out = args.out or RESULTS_DIR / f"{stamp}_{model.replace(':', '-')}{'_authz' if args.enforce_authz else ''}{'_untrusted' if args.mark_untrusted else ''}"
     out.mkdir(parents=True, exist_ok=True)
 
     config = {
         "started_at": stamp, "model": model, "mock": args.mock, "enforce_authz": args.enforce_authz,
-        "trials": args.trials, "temperature": args.temperature, "seed": args.seed,
+        "mark_untrusted": args.mark_untrusted, "trials": args.trials, "temperature": args.temperature, "seed": args.seed,
         "max_steps": args.max_steps, "retries": args.retries, "cases": [c.id for c in cases],
     }
     (out / "config.json").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
@@ -197,7 +200,8 @@ def main(argv: list[str] | None = None) -> int:
 
                 started = time.time()
                 trace, result, attempts = run_trial(case, client, model, options or None,
-                                                    args.enforce_authz, args.max_steps, args.retries)
+                                                    args.enforce_authz, args.max_steps, args.retries,
+                                                    args.mark_untrusted)
                 record = {
                     "case_id": case.id, "kind": case.kind, "trial": i, "attempts": attempts,
                     "seconds": round(time.time() - started, 2), "options": options,

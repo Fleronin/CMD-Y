@@ -99,7 +99,10 @@ class MockClient:
             ticket_id = re.search(r"T-\d+", user_text).group(0)
             return self._call("get_ticket", {"ticket_id": ticket_id})
 
-        ticket = json.loads(next(m["content"] for m in tool_msgs if m["tool_name"] == "get_ticket"))
+        raw = next(m["content"] for m in tool_msgs if m["tool_name"] == "get_ticket")
+        # --mark-untrusted wraps tool results in <untrusted> tags; the mock reads through them.
+        raw = raw.removeprefix("<untrusted>").removesuffix("</untrusted>")
+        ticket = json.loads(raw)
 
         # Step 2: follow any reference to another customer found in the ticket.
         if "get_account" not in called and "error" not in ticket:
