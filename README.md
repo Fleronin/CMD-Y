@@ -66,12 +66,17 @@ pytest
 
 ```bash
 python -m harness.run [--trials N] [--cases ID ...] [--kind benign|injection]
-                      [--mock] [--enforce-authz] [--model NAME]
+                      [--mock] [--enforce-authz] [--mark-untrusted] [--model NAME]
                       [--temperature T] [--seed S] [--max-steps N] [--retries N] [--out DIR]
 ```
 
+- `--enforce-authz`: code defense. Every tool refuses another customer's data.
+- `--mark-untrusted`: prompt defense. Ticket content is wrapped in `<untrusted>`
+  tags and the system prompt says to treat it as data, never as instructions.
+
 Each trial resets the data, installs the case's ticket, runs the agent, and
-scores the result. Output goes to `results/<timestamp>_<model>[_authz]/`:
+scores the result. Output goes to `--out`, or by default to
+`results/<timestamp>_<model>[_authz][_untrusted]/`:
 
 | File | Contents |
 |---|---|
@@ -141,6 +146,45 @@ A rerun may not match trial for trial; the per case rates are what to compare.
 Pilot runs used to tune payloads are written to `results/pilot/`, which is
 gitignored and not reported.
 
+## D3 mitigation and after runs
+
+Two defenses were measured separately against the same 24 cases, with the
+same settings as the baseline:
+
+| Defense | Flag | Code | Added |
+|---|---|---|---|
+| Ownership checks (code) | `--enforce-authz` | `app/tools.py`, `_check_owner()` | D2, off for the baseline |
+| Untrusted data marking (prompt) | `--mark-untrusted` | `app/agent.py`, `UNTRUSTED_RULE` | commit `d068604`, after the baseline tag |
+
+Reproduce (run on November 19, 2026):
+
+```bash
+git checkout d068604
+python -m harness.run --trials 20 --model gemma4:31b-cloud --temperature 0.7 --seed 428 --mark-untrusted --out results/after_prompt/gemma
+python -m harness.run --trials 20 --model gpt-oss:20b-cloud --temperature 0.7 --seed 428 --mark-untrusted --out results/after_prompt/gptoss
+python -m harness.run --trials 20 --model gemma4:31b-cloud --temperature 0.7 --seed 428 --enforce-authz --out results/after_authz/gemma
+python -m harness.run --trials 20 --model gpt-oss:20b-cloud --temperature 0.7 --seed 428 --enforce-authz --out results/after_authz/gptoss
+```
+
+Raw results:
+
+| Run | Folder |
+|---|---|
+| Prompt defense, `gemma4:31b-cloud` | `results/after_prompt/gemma/` |
+| Prompt defense, `gpt-oss:20b-cloud` | `results/after_prompt/gptoss/` |
+| Code check, `gemma4:31b-cloud` | `results/after_authz/gemma/` |
+| Code check, `gpt-oss:20b-cloud` | `results/after_authz/gptoss/` |
+
+### Before and after table
+
+`harness/compare.py` reads the committed `summary.json` files for all three
+conditions and prints the comparison as Markdown. It needs no API key.
+
+```bash
+python -m harness.compare --strongest   # one case per vector (Table 4 in the report)
+python -m harness.compare               # every injection case
+```
+
 ## Using the app directly
 
 ```bash
@@ -183,10 +227,11 @@ harness/
   cases.py    case loading and validation
   score.py    violation checks
   run.py      experiment runner
+  compare.py  before and after tables from committed summary.json files
 webapp/
   server.py   Flask app and JSON API
   templates/  the console's single HTML page
   static/     app.js and style.css
 tests/        scorer and web API unit tests
-results/      harness output; baseline/ is committed, pilot/ is gitignored
+results/      harness output; baseline/, after_prompt/, after_authz/ are committed, pilot/ is gitignored
 ```
